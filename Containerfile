@@ -1,4 +1,4 @@
-FROM quay.io/centos-boot/fedora-tier-1:eln
+FROM quay.io/centos-bootc/centos-bootc:stream9
 COPY root.keys /usr/etc-system/root.keys
 RUN mkdir -p /usr/etc-system/; \
     echo 'AuthorizedKeysFile /usr/etc-system/%u.keys' >> /etc/ssh/sshd_config.d/30-auth-system.conf; \
