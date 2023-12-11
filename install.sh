@@ -11,11 +11,10 @@ if [[ "$rootless" = "true" ]]; then
 	darwin*)
 	    podman machine stop || true;
 	    podman machine set --rootful;
-	    podman machine start;
-	    mkdir /tmp/output;;
+	    podman machine start;;
     esac
 fi
-
+mkdir -p /tmp/output
 podman login quay.io
 cp $HOME/.ssh/id_rsa.pub root.keys
 podman build -t $IMAGE .
