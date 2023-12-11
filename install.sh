@@ -16,7 +16,7 @@ cp $HOME/.ssh/id_rsa.pub root.keys
 podman build -t $IMAGE .
 podman push $IMAGE
 mkdir -p /tmp/output
-sudo podman run --rm -it --security-opt label=type:unconfined_t --privileged -v /tmp/output:/output --pull newer quay.io/centos-bootc/bootc-image-builder $IMAGE
+podman run --rm -it --security-opt label=type:unconfined_t --privileged -v /tmp/output:/output --pull newer quay.io/centos-bootc/bootc-image-builder $IMAGE
 sudo chown -R $UID output
 
 case "$OSTYPE" in
