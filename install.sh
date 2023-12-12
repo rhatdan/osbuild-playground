@@ -5,11 +5,16 @@ if [ -z "$1" ]; then
 fi
 IMAGE=$1
 AI_IMAGE=$2
+SUDO=sudo
+remote=$(podman info --format '{{.Host.ServiceIsRemote}}')
+if [[ "$remote" = "true" ]]; then
+    SUDO=""
+fi
+
 rootless=$(podman info --format '{{ .Host.Security.Rootless }}')
-echo $rootless
 if [[ "$rootless" = "true" ]]; then
     case "$OSTYPE" in
-	darwin*)
+	"darwin*" | "windows*")
 	    podman machine stop || true;
 	    podman machine set --rootful;
 	    podman machine start;
@@ -17,11 +22,11 @@ if [[ "$rootless" = "true" ]]; then
     esac
 fi
 cp $HOME/.ssh/id_rsa.pub root.keys
-sudo podman login quay.io
-sudo podman build --env AI_IMAGE=$AI_IMAGE --cap-add SYS_ADMIN -t $IMAGE .
-sudo podman push $IMAGE
-sudo mkdir -p /tmp/output
-sudo podman run --rm -it --security-opt label=type:unconfined_t --privileged -v /tmp/output:/output --pull newer quay.io/centos-bootc/bootc-image-builder $IMAGE
+$SUDO podman login quay.io
+$SUDO podman build --env AI_IMAGE=$AI_IMAGE --cap-add SYS_ADMIN -t $IMAGE .
+$SUDO podman push $IMAGE
+$SUDO mkdir -p /tmp/output
+$SUDO podman run --rm -it --security-opt label=type:unconfined_t --privileged -v /tmp/output:/output --pull newer quay.io/centos-bootc/bootc-image-builder $IMAGE
 
 case "$OSTYPE" in
 	darwin*)
