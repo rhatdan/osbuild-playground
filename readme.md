@@ -24,3 +24,9 @@ qcow2:    	1d9001b7124ed7c43fd0c6852895321a9242f11844c74a597daee37d926ac066
 Build complete!
 Results saved in
 /output`
+
+## To run using an ansible playbook
+
+` ansible-playbook bootc_image.yml `
+Upon running above command it will prompt to enter values for ` image name ` and ` ai image name ` after 
+which the playbook will run successfully
