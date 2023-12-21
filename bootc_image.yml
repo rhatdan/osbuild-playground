@@ -1,0 +1,81 @@
+---
+- name: Build and deploy container with Ansible
+  hosts: localhost
+  gather_facts: true  # Enable gathering facts about the system
+  vars_prompt:
+    - name: os_image_name
+      prompt: "Enter the operating system image name:"
+      private: no
+
+    - name: app_image
+      prompt: "Enter the application image:"
+      private: no
+
+  tasks:
+    - name: Gather facts
+      setup:
+
+    - name: Gather Podman facts
+      command: "podman info"
+      register: podman_info
+
+    - name: Set variables
+      set_fact:
+        sudo: "{% if (ansible_user | default('') == 'root') %}{{ '' }}{% else %}{{ 'sudo' }}{% endif %}"
+        ostype: "{{ 'darwin' if 'Darwin' in ansible_facts['system_vendor'] else '' }}"
+        rootless: "{{ podman_info.stdout_lines | regex_search('Host.Security.Rootless.*true') | bool }}"
+
+    - name: Perform actions if rootless
+      block:
+        - name: Stop podman machine on Darwin or Windows
+          when: "rootless and ostype in ['darwin', 'windows']"
+          command: "{{ sudo }} podman machine stop || true"
+          args:
+            warn: false
+
+        - name: Set podman machine to rootful on Darwin or Windows
+          when: "rootless and ostype in ['darwin', 'windows']"
+          command: "{{ sudo }} podman machine set --rootful"
+          args:
+            warn: false
+
+        - name: Start podman machine on Darwin or Windows
+          when: "rootless and ostype in ['darwin', 'windows']"
+          command: "{{ sudo }} podman machine start"
+          args:
+            warn: false
+
+        - name: Create directory on podman machine on Darwin or Windows
+          when: "rootless and ostype in ['darwin', 'windows']"
+          command: "{{ sudo }} podman machine mkdir -p /tmp/output"
+          args:
+            warn: false
+
+      when: rootless
+
+    - name: Copy SSH public key to root.keys
+      command: "cp {{ ansible_env.HOME }}/.ssh/id_rsa.pub root.keys"
+
+    - name: Log in to quay.io with podman
+      command: "{{ sudo }} podman login quay.io"
+
+    - name: Build the container
+      command: "{{ sudo }} podman build --env APP_IMAGE={{ app_image }} --cap-add SYS_ADMIN -t {{ os_image_name }} ."
+
+    - name: Push the container to quay.io
+      command: "{{ sudo }} podman push {{ os_image_name }}"
+
+    - name: Create /tmp/output directory
+      command: "{{ sudo }} mkdir -p /tmp/output"
+
+    - name: Run the container
+      command: "{{ sudo }} podman run --rm -it --security-opt label=type:unconfined_t --privileged -v /tmp/output:/output --pull always quay.io/centos-bootc/bootc-image-builder {{ os_image_name }}"
+      register: run_container_output
+
+    - name: Print output of Run the container
+      debug:
+        var: run_container_output.stdout_lines
+
+    - name: Copy output file on Darwin
+      when: "ostype == 'darwin'"
+      command: "podman machine ssh cp /tmp/output/qcow2/disk.qcow2 /Users/danwalsh/{{ os_image_name | basename }}.qcow2"

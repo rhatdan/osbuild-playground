@@ -3,8 +3,8 @@ if [ -z "$1" ]; then
         echo must specify an image name
 	exit
 fi
-IMAGE=$1
-AI_IMAGE=$2
+OS_IMAGE=$1
+APP_IMAGE=$2
 SUDO=sudo
 remote=$(podman info --format '{{.Host.ServiceIsRemote}}')
 if [[ "$remote" = "true" ]]; then
@@ -23,12 +23,12 @@ if [[ "$rootless" = "true" ]]; then
 fi
 cp $HOME/.ssh/id_rsa.pub root.keys
 $SUDO podman login quay.io
-$SUDO podman build --env AI_IMAGE=$AI_IMAGE --cap-add SYS_ADMIN -t $IMAGE .
-$SUDO podman push $IMAGE
+$SUDO podman build --env APP_IMAGE=$APP_IMAGE --cap-add SYS_ADMIN -t $OS_IMAGE .
+$SUDO podman push $OS_IMAGE
 $SUDO mkdir -p /tmp/output
-$SUDO podman run --rm -it --security-opt label=type:unconfined_t --privileged -v /tmp/output:/output --pull newer quay.io/centos-bootc/bootc-image-builder $IMAGE
+$SUDO podman run --rm -it --security-opt label=type:unconfined_t --privileged -v /tmp/output:/output --pull newer quay.io/centos-bootc/bootc-image-builder $OS_IMAGE
 
 case "$OSTYPE" in
 	darwin*)
-	    podman machine ssh cp /tmp/output/qcow2/disk.qcow2 /Users/danwalsh/$(basename $IMAGE).qcow2;;
+	    podman machine ssh cp /tmp/output/qcow2/disk.qcow2 /Users/danwalsh/$(basename $OS_IMAGE).qcow2;;
 esac
