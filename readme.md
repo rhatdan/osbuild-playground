@@ -1,12 +1,12 @@
 # Overview
-This repo will allow us to create bootable container based on a base image and target image that we will specify
+This repo will allow us to create bootable container using an os image and application image that we will specify
 while running the script
 
 ## How to run the script
 
 `sh install.sh quay.io/rbrhssa/bchris registry.fedoraproject.org/fedora:latest`
 
-The above command will take two arguments , of which the first one will be the target image and second one is the base image.
+The above command will take two arguments , of which the first one will be the os image and second one is the application image.
 
 ### What is the Containerfile doing ?
 
