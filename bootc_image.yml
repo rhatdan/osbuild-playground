@@ -3,8 +3,8 @@
   hosts: localhost
   gather_facts: true  # Enable gathering facts about the system
   vars_prompt:
-    - name: os_image
-      prompt: "Enter the image name:"
+    - name: os_image_name
+      prompt: "Enter the operating system image name:"
       private: no
 
     - name: app_image
