@@ -3,12 +3,12 @@
   hosts: localhost
   gather_facts: true  # Enable gathering facts about the system
   vars_prompt:
-    - name: image_name
+    - name: os_image
       prompt: "Enter the image name:"
       private: no
 
-    - name: ai_image
-      prompt: "Enter the AI image:"
+    - name: app_image
+      prompt: "Enter the application image:"
       private: no
 
   tasks:
@@ -60,16 +60,16 @@
       command: "{{ sudo }} podman login quay.io"
 
     - name: Build the container
-      command: "{{ sudo }} podman build --env AI_IMAGE={{ ai_image }} --cap-add SYS_ADMIN -t {{ image_name }} ."
+      command: "{{ sudo }} podman build --env APP_IMAGE={{ app_image }} --cap-add SYS_ADMIN -t {{ os_image_name }} ."
 
     - name: Push the container to quay.io
-      command: "{{ sudo }} podman push {{ image_name }}"
+      command: "{{ sudo }} podman push {{ os_image_name }}"
 
     - name: Create /tmp/output directory
       command: "{{ sudo }} mkdir -p /tmp/output"
 
     - name: Run the container
-      command: "{{ sudo }} podman run --rm -it --security-opt label=type:unconfined_t --privileged -v /tmp/output:/output --pull always quay.io/centos-bootc/bootc-image-builder {{ image_name }}"
+      command: "{{ sudo }} podman run --rm -it --security-opt label=type:unconfined_t --privileged -v /tmp/output:/output --pull always quay.io/centos-bootc/bootc-image-builder {{ os_image_name }}"
       register: run_container_output
 
     - name: Print output of Run the container
@@ -78,4 +78,4 @@
 
     - name: Copy output file on Darwin
       when: "ostype == 'darwin'"
-      command: "podman machine ssh cp /tmp/output/qcow2/disk.qcow2 /Users/danwalsh/{{ image_name | basename }}.qcow2"
+      command: "podman machine ssh cp /tmp/output/qcow2/disk.qcow2 /Users/danwalsh/{{ os_image_name | basename }}.qcow2"

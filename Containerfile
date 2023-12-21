@@ -7,6 +7,7 @@ RUN touch /etc/ssh/sshd_config.d/30-auth-system.conf; \
 VOLUME /var/roothome
 RUN dnf -y install httpd; dnf -y clean all
 COPY storage.conf /etc/containers/storage.conf
-RUN podman --root=/usr/lib/containers/storage pull $AI_IMAGE
+
+RUN podman --root=/usr/lib/containers/storage pull $APP_IMAGE
 RUN podman images
 RUN --mount=type=tmpfs,destination=/var ostree container commit
